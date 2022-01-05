@@ -42,7 +42,7 @@ import static org.ujorm.tools.web.ajax.JavaScriptWriter.DEFAULT_AJAX_REQUEST_PAR
  * @author Pavel Ponec
  * @see <a href=https://github.com/pponec/demo-ajax">github.com/pponec/demo-ajax</a>
  */
-@WebServlet("/regexp")
+@WebServlet({"", "/seven-voting"})
 public class RegexpServlet extends HttpServlet {
     /** Logger */
     private static final Logger LOGGER = Logger.getLogger(RegexpServlet.class.getName());
