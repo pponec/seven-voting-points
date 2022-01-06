@@ -15,25 +15,28 @@
  */
 package net.ponec.demo.servlet;
 
-import net.ponec.demo.service.RegexpService;
-import net.ponec.demo.model.Message;
-import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
+import net.ponec.demo.model.ButtonModel;
+import org.jetbrains.annotations.NotNull;
 import org.ujorm.tools.web.Element;
 import org.ujorm.tools.web.Html;
 import org.ujorm.tools.web.HtmlElement;
 import org.ujorm.tools.web.ajax.JavaScriptWriter;
 import org.ujorm.tools.web.ao.HttpParameter;
 import org.ujorm.tools.web.json.JsonBuilder;
-import static net.ponec.demo.servlet.RegexpServlet.Attrib.*;
-import static net.ponec.demo.servlet.RegexpServlet.Constants.*;
-import org.jetbrains.annotations.NotNull;
+import org.ujorm.tools.xml.config.HtmlConfig;
+import org.ujorm.tools.xml.config.impl.DefaultHtmlConfig;
+
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import static net.ponec.demo.servlet.Voting.Attrib.VOTEBUTTON;
+import static net.ponec.demo.servlet.Voting.Attrib.STATUS;
+import static net.ponec.demo.servlet.Voting.Constants.*;
 import static org.ujorm.tools.web.ajax.JavaScriptWriter.DEFAULT_AJAX_REQUEST_PARAM;
 
 /**
@@ -43,43 +46,32 @@ import static org.ujorm.tools.web.ajax.JavaScriptWriter.DEFAULT_AJAX_REQUEST_PAR
  * @see <a href=https://github.com/pponec/demo-ajax">github.com/pponec/demo-ajax</a>
  */
 @WebServlet({"", "/seven-voting"})
-public class RegexpServlet extends HttpServlet {
+public class Voting extends HttpServlet {
     /** Logger */
-    private static final Logger LOGGER = Logger.getLogger(RegexpServlet.class.getName());
-    /** A service */
-    private final RegexpService service = new RegexpService();
+    private static final Logger LOGGER = Logger.getLogger(Voting.class.getName());
+
+    /** CSS button style */
+    private static final String BTN_STYLE = "btn";
 
     /**
      * Handles the HTTP <code>GET</code> method.
      * @param input servlet request
      * @param output servlet response
-     * @throws ServletException if a servlet-specific error occurs
-     * @throws IOException if an I/O error occurs
      */
     @Override
     protected void doGet(
             final HttpServletRequest input,
-            final HttpServletResponse output)
-            throws ServletException, IOException {
+            final HttpServletResponse output) {
 
-        try (HtmlElement html = HtmlElement.of(input, output, service.getConfig("Regular expression tester"))) {
+        try (HtmlElement html = HtmlElement.of(input, output, getConfig("Seven Voting Points"))) {
             html.addCssLink("/css/regexp.css");
             writeJavaScript(html, AJAX_ENABLED);
-            Message msg = highlight(input);
+            ButtonModel model = getModel(input);
             try (Element body = html.addBody()) {
                 body.addHeading(html.getTitle());
                 body.addDiv(SUBTITLE_CSS).addText(AJAX_ENABLED ? AJAX_READY_MSG : "");
-                try (Element form = body.addForm()
-                        .setMethod(Html.V_POST).setAction("?")) {
-                    form.addInput(CONTROL_CSS)
-                            .setNameValue(REGEXP, REGEXP.of(input))
-                            .setAttribute(Html.A_PLACEHOLDER, "Regular expression");
-                    form.addTextArea(CONTROL_CSS)
-                            .setName(TEXT)
-                            .setAttribute(Html.A_PLACEHOLDER, "Plain Text")
-                            .addText(TEXT.of(input));
-                    form.addDiv().addButton("btn", "btn-primary").addText("Evaluate");
-                    form.addDiv(CONTROL_CSS, OUTPUT_CSS).addRawText(msg);
+                try (Element form = body.addForm().setMethod(Html.V_POST).setAction("?")) {
+                    createFormBody(form, model);
                 }
             }
         } catch (Exception e) {
@@ -88,11 +80,49 @@ public class RegexpServlet extends HttpServlet {
         }
     }
 
+    @NotNull
+    private ButtonModel getModel(HttpServletRequest input) {
+        return ButtonModel.of(
+                STATUS.of(input, 0),
+                VOTEBUTTON.of(input, -1));
+    }
+
+    private void createFormBody(Element form, ButtonModel msg) {
+        try (Element buttonBar = form.addDiv()) {
+            addButton(buttonBar, 0, msg, "ThumbDown-1294983.svg", "DOWN", 50);
+            addButton(buttonBar, 1, msg, "ThumbDown-1294983.svg", "Down", 30);
+            addButton(buttonBar, 2, msg, "ThumbUp-1294983.svg", "Up", 30);
+            addButton(buttonBar, 3, msg, "ThumbUp-1294983.svg", "UP", 50);
+        }
+        try (Element result = form.addDiv("result")) {
+            result.addLabel().addText("Result:");
+            result.addSpan(CONTROL_CSS, OUTPUT_CSS).addText(msg);
+        }
+        form.addInput().setType(Html.V_HIDDEN).setNameValue(STATUS, msg);
+    }
+
+    private void addButton(Element e, int buttonIndex, ButtonModel model, String file, String alt, int width) {
+        CharSequence[] css = {BTN_STYLE,  model.isEnabled(buttonIndex) ? "" : "grayscale"};
+        e.addSubmitButton(css)
+                .setNameValue(VOTEBUTTON, buttonIndex)
+                .addImage("images/" + file, alt)
+                .setAttribute(Html.A_PLACEHOLDER, alt)
+                .setAttribute("width", width)
+                .setAttribute("height", width);
+    }
+
+    private HtmlConfig getConfig(String title) {
+        DefaultHtmlConfig result = HtmlConfig.ofDefault();
+        result.setTitle(title);
+        result.setNiceFormat("\t");
+        return  result;
+    }
+
     @Override
     protected void doPost(HttpServletRequest input, HttpServletResponse output)
-            throws ServletException, IOException {
+            throws IOException {
         if (DEFAULT_AJAX_REQUEST_PARAM.of(input, false)) {
-            doAjax(input, JsonBuilder.of(input, output, service.getConfig("?"))).close();
+            doAjax(input, JsonBuilder.of(getConfig("?"), input, output)).close();
         } else {
             doGet(input, output);
         }
@@ -100,24 +130,15 @@ public class RegexpServlet extends HttpServlet {
 
     @NotNull
     protected JsonBuilder doAjax(HttpServletRequest input, JsonBuilder output)
-            throws ServletException, IOException {
-            final Message msg = highlight(input);
-            output.writeClass(OUTPUT_CSS, e -> e.addElementIf(msg.isError(), Html.SPAN, "error")
-                    .addRawText(msg));
+            throws IOException {
+            final ButtonModel model = getModel(input);
+            output.write(Html.FORM, e -> createFormBody(e, model));
             output.writeClass(SUBTITLE_CSS, AJAX_READY_MSG);
             return output;
     }
 
-    /** Build a HTML result */
-    protected Message highlight(HttpServletRequest input) {
-        return service.highlight(
-                TEXT.of(input, ""),
-                REGEXP.of(input, ""));
-    }
-
     /** Write a Javascript to a header */
-    protected void writeJavaScript(@NotNull final HtmlElement html,
-            final boolean enabled) {
+    protected void writeJavaScript(@NotNull final HtmlElement html, final boolean enabled) {
         if (enabled) {
             new JavaScriptWriter(Html.INPUT, Html.TEXT_AREA)
                     .setSubtitleSelector("." + SUBTITLE_CSS)
@@ -141,10 +162,10 @@ public class RegexpServlet extends HttpServlet {
 
     /** Servlet attributes */
     enum Attrib implements HttpParameter {
-        REGEXP,
-        TEXT;
+        VOTEBUTTON,
+        STATUS;
 
-        @Override
+        @Override @NotNull
         public String toString() {
             return name().toLowerCase();
         }
