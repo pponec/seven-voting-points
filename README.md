@@ -2,6 +2,8 @@
 
 The application presents a graphical interface design that offers users a seven level like component by four graphical buttons.
 
+![](docs/SevetPoints.jpg "Screenshot")
+
 ### System Requirements:
 
 * Java Development Kit version 8 (LTS)
