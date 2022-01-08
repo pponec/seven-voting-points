@@ -16,4 +16,5 @@ ul { width: 500px; margin-top: 2em;}
 .footer, .footer a { color: silver; font-style: italic;}
 .sevenPoints button { border: 3px solid rgba(255, 0, 0, 0.0); }
 .sevenPoints button.selected { border: 3px solid #c3def9; }
-.sevenPoints button.selected img { filter: grayscale(100%); -webkit-filter: grayscale(100%); }
+.sevenPoints button img { filter: grayscale(70%); -webkit-filter: grayscale(70%); }
+.sevenPoints button.selected img { filter: grayscale( 0%); -webkit-filter: grayscale(0%); }
