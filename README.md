@@ -4,6 +4,8 @@ The application presents a graphical interface design that offers users a seven 
 
 ![](docs/SevetPoints.jpg "Screenshot")
 
+[Try it](https://seven-voiting-points.webfort.net/).
+
 ### System Requirements:
 
 * Java Development Kit version 8 (LTS)
