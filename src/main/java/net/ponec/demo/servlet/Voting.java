@@ -88,7 +88,7 @@ public class Voting extends HttpServlet {
     }
 
     private void createFormBody(Element form, ButtonModel msg) {
-        try (Element buttonBar = form.addDiv()) {
+        try (Element buttonBar = form.addDiv("sevenPoints")) {
             addButton(buttonBar, 0, msg, "ThumbDown-1294983.svg", "DOWN", 50);
             addButton(buttonBar, 1, msg, "ThumbDown-1294983.svg", "Down", 30);
             addButton(buttonBar, 2, msg, "ThumbUp-1294983.svg", "Up", 30);
@@ -101,8 +101,14 @@ public class Voting extends HttpServlet {
         form.addInput().setType(Html.V_HIDDEN).setNameValue(STATUS, msg);
     }
 
-    private void addButton(Element e, int buttonIndex, ButtonModel model, String file, String alt, int width) {
-        CharSequence[] css = {BTN_STYLE,  model.isEnabled(buttonIndex) ? "" : "grayscale"};
+    private void addButton(
+            final Element e,
+            final int buttonIndex,
+            final ButtonModel model,
+            final String file,
+            final String alt,
+            final int width) {
+        CharSequence[] css = {BTN_STYLE,  model.isEnabled(buttonIndex) ? "" : "selected"};
         e.addSubmitButton(css)
                 .setNameValue(VOTEBUTTON, buttonIndex)
                 .addImage("images/" + file, alt)
